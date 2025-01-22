@@ -1,13 +1,23 @@
 # Imports
 import plotly.graph_objects as go
 import streamlit as st
+import pandas as pd
 
-# Import helper functions
-from helper import *
+from utils.util_functions import (
+    get_commodity_types,
+    get_commodities_by_type,
+    get_period_intervals,
+    get_prediction_strategies,
+    get_backtesting_timeframes,
+)
+
+from utils.data_fetching import fetch_commodity_history
+
+from utils.forecasting import commodity_forecast_backtesting
 
 # Configure the page
 st.set_page_config(
-    page_title="Commodity Price Forecasting",
+    page_title="Commodify",
     page_icon="🚀",
 )
 
@@ -15,7 +25,7 @@ st.set_page_config(
 #####Sidebar Start#####
 
 # Add a new section for selecting commodity type
-st.sidebar.markdown("## **Select Domain**")
+st.sidebar.markdown("## **Sector**")
 commodity_types = get_commodity_types()
 
 # Add a radio button for selecting the type
@@ -28,7 +38,7 @@ selected_type = st.sidebar.radio(
 commodity_dict = get_commodities_by_type(selected_type)
 
 # Add a new section for selecting commodity type
-st.sidebar.markdown("## **Select Commodity**")
+st.sidebar.markdown("## **Commodity**")
 # Add a dropdown for selecting the commodity
 commodity = st.sidebar.selectbox(
     "Select One",
@@ -39,22 +49,27 @@ commodity = st.sidebar.selectbox(
 commodity_ticker = commodity_dict[commodity]
 
 # Fetch and store periods and intervals
-periods = fetch_periods_intervals()
+periods = get_period_intervals()
 
 # Add a selector for period
-st.sidebar.markdown("## **Select period for historical data**")
-period = st.sidebar.selectbox("Choose a period", list(periods.keys()))
+period = st.sidebar.selectbox("Choose historical period", list(periods.keys()))
 
 # Add a selector for interval
-st.sidebar.markdown("## **Select interval for historical data**")
-interval = st.sidebar.selectbox("Choose an interval", periods[period])
+interval = st.sidebar.selectbox("Choose historical interval", periods[period])
 
-timeframe = fetch_prediction_timeframe()
+# Add a radio for strategy selection
+st.sidebar.markdown("## **Forecasting Strategy**")
+strategy_types = get_prediction_strategies()
+selected_strategy = st.sidebar.radio(
+    "Select One",
+    strategy_types,
+)
 
-# Add a selector for timeframe
-st.sidebar.markdown("## **Select Forecast Timeframe**")
-forecast_timeframe = st.sidebar.selectbox(
-    "Choose the timeframe", list(timeframe.keys())
+backtesting_timeframes = get_backtesting_timeframes()
+# Add a selector for backtesting timeframe
+st.sidebar.markdown("## **Backtesting Forecast Timeframe**")
+backtesting_timeframe = st.sidebar.selectbox(
+    "Select timeframe", list(backtesting_timeframes.keys())
 )
 
 
@@ -81,7 +96,7 @@ commodity_data = fetch_commodity_history(commodity_ticker, period, interval)
 #####Historical Data Graph#####
 
 # Add a title to the historical data graph
-st.markdown("## **Historical Data**")
+st.markdown("### **Historical Data**")
 
 # Create a plot for the historical data
 fig = go.Figure(
@@ -104,45 +119,54 @@ st.plotly_chart(fig, use_container_width=True)
 
 #####Historical Data Graph End#####
 
-
-#####Commodity Price Prediction Graph#####
+#####Backtesting Prediction Strategy Graph#####
 
 # Unpack the data
-train_df, test_df, forecast, predictions = generate_commodity_price_prediction(
+original_values, backtested_values = commodity_forecast_backtesting(
     commodity_ticker,
-    forecast_timeframe,
+    backtesting_timeframes[backtesting_timeframe],
+    # strategy_types[selected_strategy],
 )
 
 # Check if the data is not None
-if train_df is not None and (forecast >= 0).all() and (predictions >= 0).all():
-    # Add a title to the Commodity Price prediction graph
-    st.markdown("## **Price Forecasting**")
+if original_values is not None and (backtested_values >= 0).all():
+    st.markdown("### **Forecasting Strategy Analysis with Backtesting**")
 
-    # Create a plot for the Commodity Price prediction
-    fig = go.Figure(
-        data=[
-            go.Scatter(
-                x=forecast.index,
-                y=forecast,
-                name="Forecast",
-                mode="lines",
-                line=dict(color="orange"),
-            ),
-        ]
+    # Create a plotly figure
+    comparison_fig = go.Figure()
+
+    # Add original values to the plot
+    comparison_fig.add_trace(
+        go.Scatter(
+            x=original_values.index,
+            y=original_values["Close"],
+            mode="lines",
+            name="Original Value",
+            line=dict(color="grey"),
+        )
     )
 
-    # Customize the Commodity Price prediction graph
-    fig.update_layout(xaxis_rangeslider_visible=False)
+    # Add backtested values to the plot
+    comparison_fig.add_trace(
+        go.Scatter(
+            x=backtested_values.index,
+            y=backtested_values,
+            mode="lines",
+            name="Forecasted Value",
+            line=dict(color="yellow"),
+        )
+    )
 
-    # Use the native streamlit theme.
-    st.plotly_chart(fig, use_container_width=True)
+    # Display the comparison plot
+    st.plotly_chart(comparison_fig, use_container_width=True)
+    #####Overlay Comparison Graph End#####
 
 # If the data is None
 else:
     # Add a title to the Commodity Price prediction graph
-    st.markdown("## **Price Forecasting**")
+    st.markdown("## **Backtesting Prediction Strategy**")
 
     # Add a message to the Commodity Price prediction graph
-    st.markdown("### **Data not enough for prediction.**")
+    st.markdown("### **Backtesting not enabled**")
 
 #####Commodity Price Prediction Graph End#####

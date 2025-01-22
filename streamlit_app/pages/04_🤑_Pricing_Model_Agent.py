@@ -1,11 +1,8 @@
 import streamlit as st
 
-# Import helper functions
-from helper import *
-
 # Configure the page
 st.set_page_config(
-    page_title="Price Modelling Agent",
+    page_title="Commodify",
     page_icon="🚀",
 )
 

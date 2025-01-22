@@ -1,4 +1,4 @@
-"""# 🚀 **Commodify**
+# 🚀 **Commodify**
 
 ### **AI Powered Commodity Trading**
 
@@ -42,4 +42,3 @@ Some potential features for future releases:
 ## **⚖️ Disclaimer**
 
 **This project is under construction and is not intended for production use.**
-"""

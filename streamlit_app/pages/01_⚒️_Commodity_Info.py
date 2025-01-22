@@ -1,12 +1,17 @@
 # Import streamlit
 import streamlit as st
+import pandas as pd
 
-# Import helper functions
-from helper import *
+from utils.util_functions import (
+    get_commodity_types,
+    get_commodities_by_type,
+)
+
+from utils.data_fetching import fetch_commodity_info
 
 # Configure the page
 st.set_page_config(
-    page_title="Commodity Info",
+    page_title="Commodify",
     page_icon="🚀",
 )
 

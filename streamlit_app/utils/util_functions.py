@@ -94,3 +94,23 @@ def get_stock_news_topics():
         "Technology": "technology",
     }
     return news_topics
+
+
+def get_stock_list():
+    stock_list = {
+        "Apple": "AAPL",
+        "Google": "GOOGL",
+        "Microsoft": "MSFT",
+        "Amazon": "AMZN",
+        "Meta": "META",
+    }
+
+    return stock_list
+
+
+def get_stock_news_list_sorting():
+    stock_news_list_sorting = {
+        "Relevance": "RELEVANCE",
+        "Latest": "EARLIEST",
+    }
+    return stock_news_list_sorting

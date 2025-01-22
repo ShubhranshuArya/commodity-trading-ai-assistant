@@ -1,4 +1,6 @@
 import yfinance as yf
+import requests
+import pandas as pd
 
 
 def fetch_commodity_info(commodity_ticker):
@@ -78,3 +80,26 @@ def fetch_commodity_history(commodity_ticker, period, interval):
 
     # Return the commodity data
     return commodity_data_history
+
+
+# def fetch_stock_news(
+#     stock_ticker,
+#     news_topics,
+#     time_from,
+#     time_to,
+# ):
+# API_KEY = "ZD8AJYKXXDC8NVHJ"
+# article_limit = 100
+# base_url = "https://www.alphavantage.co/query"
+# function = "NEWS_SENTIMENT"
+# api_key = API_KEY
+# parameters = f"tickers={stock_ticker}&topics={news_topics}&apikey={api_key}&time_from={time_from}&time_to={time_to}&limit={article_limit}"
+# url = f"{base_url}?function={function}&{parameters}"
+# r = requests.get(url)
+# data = r.json()
+
+# articles = data.get("feed", [])
+
+# article_df = pd.DataFrame(articles)
+
+#     return article_df

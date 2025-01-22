@@ -13,7 +13,7 @@ from utils.util_functions import (
 
 from utils.data_fetching import fetch_commodity_history
 
-from utils.forecasting import commodity_forecast_backtesting
+from utils.forecast_compute import commodity_forecast_backtesting
 
 # Configure the page
 st.set_page_config(

@@ -8,3 +8,7 @@ seaborn
 statsmodels
 streamlit
 yfinance
+torch
+tqdm
+transformers
+textblob

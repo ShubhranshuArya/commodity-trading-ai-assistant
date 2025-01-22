@@ -72,3 +72,25 @@ def get_backtesting_timeframes():
         "60 Days": pd.DateOffset(days=60),
     }
     return timeframes
+
+
+def get_stock_news_topics():
+    news_topics = {
+        "All": "all",
+        "Blockchain": "blockchain",
+        "Earnings": "earnings",
+        "IPO": "ipo",
+        "Mergers & Acquisitions": "mergers_and_acquisitions",
+        "Financial Markets": "financial_markets",
+        "Economy - Fiscal Policy": "economy_fiscal",
+        "Economy - Monetary Policy": "economy_monetary",
+        "Economy - Macro/Overall": "economy_macro",
+        "Energy & Transportation": "energy_transportation",
+        "Finance": "finance",
+        "Life Sciences": "life_sciences",
+        "Manufacturing": "manufacturing",
+        "Real Estate & Construction": "real_estate",
+        "Retail & Wholesale": "retail_wholesale",
+        "Technology": "technology",
+    }
+    return news_topics

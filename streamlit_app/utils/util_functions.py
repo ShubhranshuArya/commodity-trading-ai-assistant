@@ -76,7 +76,7 @@ def get_backtesting_timeframes():
 
 def get_stock_news_topics():
     news_topics = {
-        "All": "all",
+        "All": "",
         "Blockchain": "blockchain",
         "Earnings": "earnings",
         "IPO": "ipo",

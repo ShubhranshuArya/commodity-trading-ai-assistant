@@ -2,6 +2,9 @@ import yfinance as yf
 import requests
 import pandas as pd
 
+from dotenv import load_dotenv
+import os
+
 
 def fetch_commodity_info(commodity_ticker):
     # Pull the data for the first security
@@ -82,24 +85,48 @@ def fetch_commodity_history(commodity_ticker, period, interval):
     return commodity_data_history
 
 
-# def fetch_stock_news(
-#     stock_ticker,
-#     news_topics,
-#     time_from,
-#     time_to,
-# ):
-# API_KEY = "ZD8AJYKXXDC8NVHJ"
-# article_limit = 100
-# base_url = "https://www.alphavantage.co/query"
-# function = "NEWS_SENTIMENT"
-# api_key = API_KEY
-# parameters = f"tickers={stock_ticker}&topics={news_topics}&apikey={api_key}&time_from={time_from}&time_to={time_to}&limit={article_limit}"
-# url = f"{base_url}?function={function}&{parameters}"
-# r = requests.get(url)
-# data = r.json()
+def fetch_stock_news(stock_ticker, news_topics, sort_by):
+    news_api_key = os.getenv("API_KEY")
+    article_limit = 1000
+    base_url = "https://www.alphavantage.co/query"
+    function = "NEWS_SENTIMENT"
 
-# articles = data.get("feed", [])
+    parameters = f"tickers={stock_ticker}&apikey={news_api_key}&sort={sort_by}&limit={article_limit}"
+    url = f"{base_url}?function={function}&{parameters}"
+    r = requests.get(url)
+    data = r.json()
 
-# article_df = pd.DataFrame(articles)
+    articles = data.get("feed", [])
 
-#     return article_df
+    article_df = pd.DataFrame(articles)
+
+    return article_df
+
+
+def fetch_stock_price(stock_ticker):
+    # Download the stock price data to compare
+    stock_data = yf.Ticker(stock_ticker)
+    stock_data = stock_data.history(period="5y", interval="1d")
+
+    stock_data.drop("Dividends", axis=1, inplace=True)
+    stock_data.drop("Stock Splits", axis=1, inplace=True)
+
+    # Get a price for every day (including weekends etc)
+    stock_data = stock_data.resample("D").mean()
+
+    # Fill forward price data (carry the price data forward for weekends etc)
+    stock_data.fillna(method="ffill", inplace=True)
+
+    stock_data.index = stock_data.index.tz_localize(None)
+
+    # Get a 28 day and 120 day moving average of the close price
+    stock_data["close_ma"] = stock_data["Close"].rolling(window=28, center=False).mean()
+    stock_data["close_120_ma"] = (
+        stock_data["Close"].rolling(window=120, center=False).mean()
+    )
+    stock_data.dropna(inplace=True)
+
+    # Calculate the short term price movements by subtracting the 120 day MA
+    stock_data["close_diff"] = stock_data["Close"] - stock_data["close_120_ma"]
+
+    return stock_data

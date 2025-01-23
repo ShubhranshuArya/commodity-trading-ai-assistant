@@ -13,3 +13,6 @@ tqdm
 transformers
 textblob
 python-dotenv
+keras
+scikit-learn
+tensorflow

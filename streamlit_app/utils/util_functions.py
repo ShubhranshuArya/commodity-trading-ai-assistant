@@ -60,7 +60,7 @@ def get_period_intervals():
 
 
 def get_prediction_strategies():
-    return ["ARIMA", "LSTM", "Hybrid"]
+    return ["ARIMA", "LSTM"]
 
 
 def get_backtesting_timeframes():

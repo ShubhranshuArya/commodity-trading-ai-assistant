@@ -1,12 +1,17 @@
 from statsmodels.tsa.ar_model import AutoReg
 import yfinance as yf
 import pandas as pd
+from tensorflow import keras
+from keras.models import Sequential
+from keras.layers import LSTM, Dense
+from sklearn.preprocessing import MinMaxScaler
+import numpy as np
 
 
 def commodity_forecast_backtesting(
     commodity_ticker,
     backtest_timeframe,
-    # selected_strategy,
+    selected_strategy,
 ):
     try:
         commodity_data = yf.Ticker(commodity_ticker)
@@ -21,20 +26,66 @@ def commodity_forecast_backtesting(
         ]
         original_data = commodity_data_close[commodity_data_close.index > backtest_date]
 
-        train_df = forecasting_data.iloc[: int(len(forecasting_data) * 0.9) + 1]
-        test_df = forecasting_data.iloc[int(len(forecasting_data) * 0.9) :]
+        if selected_strategy == "ARIMA":
+            # ------------------
+            train_df = forecasting_data.iloc[: int(len(forecasting_data) * 0.9) + 1]
+            test_df = forecasting_data.iloc[int(len(forecasting_data) * 0.9) :]
 
-        model = AutoReg(train_df["Close"], 250).fit(cov_type="HC0")
+            model = AutoReg(train_df["Close"], 250).fit(cov_type="HC0")
 
-        backtest_end_date = test_df.index[-1] + backtest_timeframe
-        predicted_data = model.predict(
-            start=test_df.index[0],
-            end=backtest_end_date,
-            dynamic=True,
-        )
+            backtest_end_date = test_df.index[-1] + backtest_timeframe
+            predicted_data = model.predict(
+                start=test_df.index[0],
+                end=backtest_end_date,
+                dynamic=True,
+            )
+            predicted_data = predicted_data[predicted_data.index > backtest_date]
 
-        predicted_data = predicted_data[predicted_data.index > backtest_date]
+        else:
+            # Scale the data
+            scaler = MinMaxScaler(feature_range=(0, 1))
+            scaled_data = scaler.fit_transform(forecasting_data)
 
+            # Prepare the data for LSTM
+            def create_dataset(data, time_step=1):
+                X, Y = [], []
+                for i in range(len(data) - time_step - 1):
+                    a = data[i : (i + time_step), 0]
+                    X.append(a)
+                    Y.append(data[i + time_step, 0])
+                return np.array(X), np.array(Y)
+
+            time_step = 60
+            X, Y = create_dataset(scaled_data, time_step)
+            X = X.reshape(X.shape[0], X.shape[1], 1)
+
+            # Split into train and test
+            train_size = int(len(X) * 0.9)
+            train_X, test_X = X[:train_size], X[train_size:]
+            train_Y, test_Y = Y[:train_size], Y[train_size:]
+
+            # Build the LSTM model
+            model = Sequential()
+            model.add(LSTM(50, return_sequences=True, input_shape=(time_step, 1)))
+            model.add(LSTM(50, return_sequences=False))
+            model.add(Dense(1))
+            model.compile(optimizer="adam", loss="mean_squared_error")
+
+            # Train the model
+            model.fit(train_X, train_Y, epochs=100, batch_size=64, verbose=1)
+
+            # Predict
+            test_predict = model.predict(test_X)
+            test_predict = scaler.inverse_transform(test_predict.reshape(-1, 1))
+
+            # Prepare predicted data for return
+            predicted_data = pd.DataFrame(
+                test_predict,
+                index=forecasting_data.index[-len(test_predict) :],
+                columns=["Close"],
+            )
+
+        # --------------
         return original_data, predicted_data
 
     except:

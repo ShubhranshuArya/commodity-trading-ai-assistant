@@ -125,11 +125,11 @@ st.plotly_chart(fig, use_container_width=True)
 original_values, backtested_values = commodity_forecast_backtesting(
     commodity_ticker,
     backtesting_timeframes[backtesting_timeframe],
-    # strategy_types[selected_strategy],
+    selected_strategy,
 )
 
 # Check if the data is not None
-if original_values is not None and (backtested_values >= 0).all():
+if original_values is not None:
     st.markdown("### **Forecasting Strategy Analysis with Backtesting**")
 
     # Create a plotly figure
